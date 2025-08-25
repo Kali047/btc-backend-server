@@ -33,6 +33,9 @@ coverage/
 node_modules/
 jspm_packages/
 
+.github/copilot-instructions.md
+copilot-instructions.md
+
 # Optional npm cache directory
 .npm
 
