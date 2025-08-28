@@ -18,12 +18,12 @@ export class WalletsService {
 
   // Create wallet for new user
   async create(userId: string, createWalletDto: CreateWalletDto): Promise<WalletDocument> {
-    const userExists = await this.userModel.findOne({ userId }).exec();
+    const userExists = await this.userModel.findById(userId).exec();
     if (!userExists) {
       throw new NotFoundException('User not found');
     }
 
-    const existingWallet = await this.walletModel.findOne({ user: userExists._id }).exec();
+    const existingWallet = await this.walletModel.findOne({ user: userExists.id }).exec();
     if (existingWallet) {
       throw new BadRequestException('User already has a wallet');
     }
@@ -45,7 +45,8 @@ export class WalletsService {
 
   // Get user's wallet
   async getUserWallet(userId: string): Promise<Wallet> {
-    const user = await this.userModel.findOne({ userId }).exec();
+    console.log(`Getting wallet for user: ${userId}`);
+    const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -66,7 +67,7 @@ export class WalletsService {
 
   // User top up wallet (creates pending transaction)
   async topUpWallet(userId: string, topUpDto: TopUpWalletDto): Promise<{ wallet: Wallet, transaction: Transaction }> {
-    const user = await this.userModel.findOne({ userId }).exec();
+    const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -107,7 +108,7 @@ export class WalletsService {
 
   // User request withdrawal (creates pending transaction)
   async withdrawFromWallet(userId: string, withdrawDto: WithdrawWalletDto): Promise<{ wallet: Wallet, transaction: Transaction }> {
-    const user = await this.userModel.findOne({ userId }).exec();
+    const user = await this.userModel.findById( userId ).exec();
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -181,7 +182,7 @@ export class WalletsService {
 
   // Get specific user wallet (admin only)
   async getUserWalletByAdmin(userId: string): Promise<Wallet> {
-    const user = await this.userModel.findOne({ userId }).exec();
+    const user = await this.userModel.findById(userId ).exec();
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -204,7 +205,7 @@ export class WalletsService {
 
   // Admin update user wallet
   async adminUpdateWallet(userId: string, updateDto: AdminUpdateWalletDto): Promise<Wallet> {
-    const user = await this.userModel.findOne({ userId }).exec();
+    const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -230,7 +231,7 @@ export class WalletsService {
 
   // Admin credit wallet and approve transaction
   async adminCreditWallet(creditDto: AdminCreditWalletDto): Promise<{ wallet: Wallet, transaction: Transaction }> {
-    const user = await this.userModel.findOne({ userId: creditDto.userId }).exec();
+    const user = await this.userModel.findById(creditDto.userId).exec();
     if (!user) {
       throw new NotFoundException('User not found');
     }
