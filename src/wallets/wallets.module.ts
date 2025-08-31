@@ -5,6 +5,7 @@ import { WalletsController } from './wallets.controller';
 import { Wallet, WalletSchema } from './schemas/wallet.schema';
 import { Transaction, TransactionSchema } from '../transactions/schemas/transaction.schema';
 import { User, UserSchema } from '../users/schemas/user.schema';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { User, UserSchema } from '../users/schemas/user.schema';
       { name: Transaction.name, schema: TransactionSchema },
       { name: User.name, schema: UserSchema },
     ]),
+    CloudinaryModule,
   ],
   controllers: [WalletsController],
   providers: [WalletsService],

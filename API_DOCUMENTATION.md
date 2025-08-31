@@ -384,7 +384,58 @@
 }
 ```
 
-### 24. **GET** `/wallets/admin/all`
+### 24. **POST** `/wallets/card/add`
+**Description**: Add credit/debit card to wallet (uploads front & back images)  
+**Authentication**: JWT required  
+**Request Body**: FormData with 2 files + card data
+```json
+{
+  "cardHolderName": "string",
+  "cardNumber": "string (last 4 digits only)", 
+  "expiryDate": "string (MM/YY format)",
+  "cvv": "string (3-4 digits)",
+  "files": "2 uploaded files (front and back of card)"
+}
+```
+**Response**:
+```json
+{
+  "message": "Card added successfully",
+  "wallet": "updated-wallet-object",
+  "cardImages": {
+    "front": {
+      "url": "string",
+      "publicId": "string"
+    },
+    "back": {
+      "url": "string", 
+      "publicId": "string"
+    }
+  }
+}
+```
+
+### 25. **GET** `/wallets/card/info`
+**Description**: Get user's card information (masked for security)  
+**Authentication**: JWT required  
+**Response**:
+```json
+{
+  "cardHolderName": "string",
+  "cardNumber": "****-****-****-1234",
+  "expiryDate": "MM/YY",
+  "addedAt": "date",
+  "isActive": "boolean",
+  "hasCard": true
+}
+```
+
+### 26. **DELETE** `/wallets/card/remove`
+**Description**: Remove card from wallet  
+**Authentication**: JWT required  
+**Response**: Updated wallet object without card info
+
+### 27. **GET** `/wallets/admin/all`
 **Description**: Get all wallets (Admin only)  
 **Authentication**: JWT + Admin role required  
 **Query Parameters**:

@@ -9,20 +9,28 @@ import {
   UseGuards,
   Request,
   Query,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { WalletsService } from './wallets.service';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { TopUpWalletDto, WithdrawWalletDto, AdminCreditWalletDto, AdminUpdateWalletDto } from './dto/wallet-operation.dto';
+import { AddCardDto } from './dto/add-card.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/schemas/user.schema';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller('wallets')
 export class WalletsController {
-  constructor(private readonly walletsService: WalletsService) {}
+  constructor(
+    private readonly walletsService: WalletsService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   // USER ENDPOINTS
 
@@ -39,6 +47,60 @@ export class WalletsController {
   @Post('withdraw')
   withdrawFromWallet(@Request() req, @Body() withdrawDto: WithdrawWalletDto) {
     return this.walletsService.withdrawFromWallet(req.user.userId, withdrawDto);
+  }
+
+  // CARD MANAGEMENT ENDPOINTS
+
+  @Post('card/add')
+  @UseInterceptors(FilesInterceptor('files', 2)) // Expect 2 files: front and back
+  async addCard(
+    @Request() req,
+    @Body() addCardDto: AddCardDto,
+    @UploadedFiles() files: Express.Multer.File[]
+  ) {
+    if (!files || files.length !== 2) {
+      throw new Error('Please upload both front and back images of the card');
+    }
+
+    // Upload both images to Cloudinary
+    const uploadResults = await Promise.all(
+      files.map(file => this.cloudinaryService.uploadDocument(file))
+    );
+
+    const frontImageUrl = uploadResults[0].url;
+    const backImageUrl = uploadResults[1].url;
+
+    const wallet = await this.walletsService.addCardToWallet(
+      req.user.userId,
+      addCardDto,
+      frontImageUrl,
+      backImageUrl
+    );
+
+    return {
+      message: 'Card added successfully',
+      wallet,
+      cardImages: {
+        front: {
+          url: frontImageUrl,
+          publicId: uploadResults[0].publicId
+        },
+        back: {
+          url: backImageUrl,
+          publicId: uploadResults[1].publicId
+        }
+      }
+    };
+  }
+
+  @Get('card/info')
+  getCardInfo(@Request() req) {
+    return this.walletsService.getCardInfo(req.user.userId);
+  }
+
+  @Delete('card/remove')
+  removeCard(@Request() req) {
+    return this.walletsService.removeCard(req.user.userId);
   }
 
   // ADMIN ENDPOINTS

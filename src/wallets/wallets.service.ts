@@ -7,6 +7,7 @@ import { User, UserDocument, UserRole } from '../users/schemas/user.schema';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { TopUpWalletDto, WithdrawWalletDto, AdminCreditWalletDto, AdminUpdateWalletDto } from './dto/wallet-operation.dto';
+import { AddCardDto } from './dto/add-card.dto';
 
 @Injectable()
 export class WalletsService {
@@ -65,7 +66,97 @@ export class WalletsService {
     return wallet;
   }
 
-  // User top up wallet (creates pending transaction)
+  // Add card information to wallet
+  async addCardToWallet(
+    userId: string, 
+    addCardDto: AddCardDto, 
+    frontImageUrl: string, 
+    backImageUrl: string
+  ): Promise<Wallet> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    let wallet: WalletDocument | null = await this.walletModel.findOne({ user: user._id }).exec();
+    if (!wallet) {
+      wallet = await this.create(userId, {});
+    }
+
+    // Check if card already exists
+    if (wallet.cardInfo) {
+      throw new BadRequestException('Card already exists. Please remove the existing card first.');
+    }
+
+    // Add card information
+    wallet.cardInfo = {
+      frontImageUrl,
+      backImageUrl,
+      cvv: addCardDto.cvv,
+      cardHolderName: addCardDto.cardHolderName,
+      cardNumber: addCardDto.cardNumber, // Last 4 digits only
+      expiryDate: addCardDto.expiryDate,
+      addedAt: new Date(),
+      isActive: true,
+    };
+
+    await wallet.save();
+
+    return this.walletModel
+      .findById(wallet._id)
+      .populate('userDetails', 'userId fullname email')
+      .exec();
+  }
+
+  // Get card information
+  async getCardInfo(userId: string): Promise<any> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const wallet = await this.walletModel.findOne({ user: user._id }).exec();
+    if (!wallet || !wallet.cardInfo) {
+      throw new NotFoundException('No card information found');
+    }
+
+    // Return card info without sensitive data for security
+    return {
+      cardHolderName: wallet.cardInfo.cardHolderName,
+      cardNumber: `****-****-****-${wallet.cardInfo.cardNumber}`,
+      expiryDate: wallet.cardInfo.expiryDate,
+      addedAt: wallet.cardInfo.addedAt,
+      isActive: wallet.cardInfo.isActive,
+      hasCard: true,
+    };
+  }
+
+  // Remove card information
+  async removeCard(userId: string): Promise<Wallet> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const wallet = await this.walletModel.findOne({ user: user._id }).exec();
+    if (!wallet) {
+      throw new NotFoundException('Wallet not found');
+    }
+
+    if (!wallet.cardInfo) {
+      throw new NotFoundException('No card information found');
+    }
+
+    wallet.cardInfo = null;
+    await wallet.save();
+
+    return this.walletModel
+      .findById(wallet._id)
+      .populate('userDetails', 'userId fullname email')
+      .exec();
+  }
+
+  // Update top up to use card as default payment method if available
   async topUpWallet(userId: string, topUpDto: TopUpWalletDto): Promise<{ wallet: Wallet, transaction: Transaction }> {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
@@ -77,6 +168,14 @@ export class WalletsService {
       wallet = await this.create(userId, {});
     }
 
+    // Determine payment method - use CARD if card info exists and no specific method provided
+    let paymentMethod = topUpDto.paymentMethod;
+    if (!paymentMethod && wallet.cardInfo && wallet.cardInfo.isActive) {
+      paymentMethod = 'CARD';
+    } else if (!paymentMethod) {
+      paymentMethod = 'Bank Transfer';
+    }
+
     // Create pending transaction
     const transaction = new this.transactionModel({
       user: user._id,
@@ -85,7 +184,7 @@ export class WalletsService {
       transactionType: TransactionType.DEPOSIT,
       action: TransactionAction.FUNDING,
       status: TransactionStatus.PENDING,
-      paymentMethod: topUpDto.paymentMethod || 'Bank Transfer',
+      paymentMethod: paymentMethod,
       description: topUpDto.description || 'Wallet Top Up',
       reference: this.generateTransactionReference(),
       date: new Date(),
