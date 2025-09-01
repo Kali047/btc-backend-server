@@ -77,4 +77,9 @@ export class AdminUpdateWalletDto {
   @IsNumber()
   @Min(0)
   pendingWithdrawal?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  pendingDeposit?: number;
 }

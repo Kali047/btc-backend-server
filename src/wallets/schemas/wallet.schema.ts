@@ -50,6 +50,9 @@ export class Wallet {
   @Prop({ required: true, default: 0.00 })
   pendingWithdrawal: number;
 
+  @Prop({ required: true, default: 0.00 })
+  pendingDeposit: number;
+
   @Prop({ type: CardInfo, default: null })
   cardInfo: CardInfo;
 }

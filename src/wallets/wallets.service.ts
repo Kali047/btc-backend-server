@@ -36,6 +36,7 @@ export class WalletsService {
       profitBalance: 0,
       bonusBalance: 0,
       pendingWithdrawal: 0,
+      pendingDeposit: 0,
       ...createWalletDto,
     });
 
@@ -192,8 +193,8 @@ export class WalletsService {
 
     await transaction.save();
 
-    // Update pending withdrawal amount
-    wallet.pendingWithdrawal += topUpDto.amount;
+    // Update pending deposit amount for top-up transactions
+    wallet.pendingDeposit += topUpDto.amount;
     await wallet.save();
 
     return {
@@ -412,11 +413,11 @@ export class WalletsService {
         transaction.transactionType === TransactionType.CREDIT ||
         transaction.transactionType === TransactionType.TOP_UP) {
       
-      // Move from pending to available balance
-      wallet.pendingWithdrawal -= transaction.amount;
+      // Move from pending deposit to available balance
+      wallet.pendingDeposit -= transaction.amount;
       wallet.availableBalance += transaction.amount;
     } else if (transaction.transactionType === TransactionType.WITHDRAWAL) {
-      // Complete withdrawal - remove from pending
+      // Complete withdrawal - remove from pending withdrawal
       wallet.pendingWithdrawal -= transaction.amount;
     }
 
@@ -462,12 +463,14 @@ export class WalletsService {
 
     // Revert wallet changes for rejected transactions
     if (transaction.transactionType === TransactionType.WITHDRAWAL) {
-      // Return amount to available balance
+      // Return amount to available balance for withdrawal rejections
       wallet.availableBalance += transaction.amount;
       wallet.pendingWithdrawal -= transaction.amount;
-    } else {
-      // Remove from pending withdrawal for deposits/credits
-      wallet.pendingWithdrawal -= transaction.amount;
+    } else if (transaction.transactionType === TransactionType.DEPOSIT || 
+               transaction.transactionType === TransactionType.CREDIT ||
+               transaction.transactionType === TransactionType.TOP_UP) {
+      // Remove from pending deposit for rejected deposits/credits
+      wallet.pendingDeposit -= transaction.amount;
     }
 
     await wallet.save();
@@ -527,7 +530,7 @@ export class WalletsService {
     }
 
     // Check if wallet has balance
-    if (wallet.totalBalance > 0 || wallet.pendingWithdrawal > 0) {
+    if (wallet.totalBalance > 0 || wallet.pendingWithdrawal > 0 || wallet.pendingDeposit > 0) {
       throw new BadRequestException('Cannot delete wallet with active balance or pending transactions');
     }
 

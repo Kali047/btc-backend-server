@@ -341,6 +341,8 @@
   "profitBalance": "number",
   "bonusBalance": "number",
   "pendingWithdrawal": "number",
+  "pendingDeposit": "number",
+  "cardInfo": {/* card information if added */},
   "userDetails": {/* user info */},
   "transactions": [/* recent transactions */]
 }
@@ -469,11 +471,11 @@
 **Request Body**:
 ```json
 {
-  "totalBalance": "number", // optional
   "availableBalance": "number", // optional
   "profitBalance": "number", // optional
   "bonusBalance": "number", // optional
-  "pendingWithdrawal": "number" // optional
+  "pendingWithdrawal": "number", // optional
+  "pendingDeposit": "number" // optional
 }
 ```
 **Response**: Updated wallet object
