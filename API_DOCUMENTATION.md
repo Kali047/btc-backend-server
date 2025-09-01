@@ -351,11 +351,12 @@
 ### 22. **POST** `/wallets/top-up`
 **Description**: Request wallet top-up (creates pending transaction)  
 **Authentication**: JWT required  
+**Account Status**: Account must be ACTIVE  
 **Request Body**:
 ```json
 {
   "amount": "number (min 0.01)",
-  "paymentMethod": "string", // optional
+  "paymentMethod": "string", // optional - defaults to CARD if card exists
   "description": "string" // optional
 }
 ```
@@ -366,10 +367,13 @@
   "transaction": "created-transaction-object"
 }
 ```
+**Error Responses**:
+- `403 Forbidden`: If account status is not ACTIVE
 
 ### 23. **POST** `/wallets/withdraw`
 **Description**: Request withdrawal (creates pending transaction)  
 **Authentication**: JWT required  
+**Account Status**: Account must be ACTIVE  
 **Request Body**:
 ```json
 {
@@ -385,10 +389,14 @@
   "transaction": "created-transaction-object"
 }
 ```
+**Error Responses**:
+- `400 Bad Request`: If insufficient balance
+- `403 Forbidden`: If account status is not ACTIVE
 
 ### 24. **POST** `/wallets/card/add`
 **Description**: Add credit/debit card to wallet (uploads front & back images)  
 **Authentication**: JWT required  
+**Account Status**: Account must be ACTIVE  
 **Request Body**: FormData with 2 files + card data
 ```json
 {
@@ -406,6 +414,19 @@
   "wallet": "updated-wallet-object",
   "cardImages": {
     "front": {
+      "url": "string",
+      "publicId": "string"
+    },
+    "back": {
+      "url": "string", 
+      "publicId": "string"
+    }
+  }
+}
+```
+**Error Responses**:
+- `400 Bad Request`: If card already exists
+- `403 Forbidden`: If account status is not ACTIVE
       "url": "string",
       "publicId": "string"
     },
@@ -435,7 +456,11 @@
 ### 26. **DELETE** `/wallets/card/remove`
 **Description**: Remove card from wallet  
 **Authentication**: JWT required  
-**Response**: Updated wallet object without card info
+**Account Status**: Account must be ACTIVE  
+**Response**: Updated wallet object without card info  
+**Error Responses**:
+- `404 Not Found`: If no card information found
+- `403 Forbidden`: If account status is not ACTIVE
 
 ### 27. **GET** `/wallets/admin/all`
 **Description**: Get all wallets (Admin only)  

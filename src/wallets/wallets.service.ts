@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Wallet, WalletDocument } from './schemas/wallet.schema';
 import { Transaction, TransactionDocument, TransactionStatus, TransactionType, TransactionAction } from '../transactions/schemas/transaction.schema';
-import { User, UserDocument, UserRole } from '../users/schemas/user.schema';
+import { User, UserDocument, UserRole, AccountStatus } from '../users/schemas/user.schema';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { TopUpWalletDto, WithdrawWalletDto, AdminCreditWalletDto, AdminUpdateWalletDto } from './dto/wallet-operation.dto';
@@ -79,6 +79,11 @@ export class WalletsService {
       throw new NotFoundException('User not found');
     }
 
+    // Check if account is active
+    if (user.accountStatus !== AccountStatus.ACTIVE) {
+      throw new ForbiddenException(`Cannot add card. Account status is ${user.accountStatus}. Please contact support.`);
+    }
+
     let wallet: WalletDocument | null = await this.walletModel.findOne({ user: user._id }).exec();
     if (!wallet) {
       wallet = await this.create(userId, {});
@@ -139,6 +144,11 @@ export class WalletsService {
       throw new NotFoundException('User not found');
     }
 
+    // Check if account is active
+    if (user.accountStatus !== AccountStatus.ACTIVE) {
+      throw new ForbiddenException(`Cannot remove card. Account status is ${user.accountStatus}. Please contact support.`);
+    }
+
     const wallet = await this.walletModel.findOne({ user: user._id }).exec();
     if (!wallet) {
       throw new NotFoundException('Wallet not found');
@@ -162,6 +172,11 @@ export class WalletsService {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    // Check if account is active
+    if (user.accountStatus !== AccountStatus.ACTIVE) {
+      throw new ForbiddenException(`Cannot perform deposits. Account status is ${user.accountStatus}. Please contact support.`);
     }
 
     let wallet: WalletDocument | null = await this.walletModel.findOne({ user: user._id }).exec();
@@ -211,6 +226,11 @@ export class WalletsService {
     const user = await this.userModel.findById( userId ).exec();
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    // Check if account is active
+    if (user.accountStatus !== AccountStatus.ACTIVE) {
+      throw new ForbiddenException(`Cannot perform withdrawals. Account status is ${user.accountStatus}. Please contact support.`);
     }
 
     const wallet = await this.walletModel.findOne({ user: user._id }).exec();
