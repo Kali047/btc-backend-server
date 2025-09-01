@@ -7,7 +7,7 @@ export class AddCardDto {
 
   @IsString()
   @IsNotEmpty()
-  @Length(4, 4, { message: 'Card number must be last 4 digits only' })
+  @Length(16, 16, { message: 'Card number must be last 16 digits only' })
   @Matches(/^\d{4}$/, { message: 'Card number must contain only digits' })
   cardNumber: string; // Last 4 digits only
 
