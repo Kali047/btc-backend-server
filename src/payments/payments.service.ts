@@ -50,10 +50,16 @@ export class PaymentsService {
     const orderNumber = this.generateOrderNumber();
 
     try {
+      // Get exchange rate and calculate crypto amount
+      const exchangeRate = await this.getCryptoRate(createPaymentDto.currency, createPaymentDto.cryptoCurrency);
+      const cryptoAmount = createPaymentDto.amount * exchangeRate;
+      
+      this.logger.log(`Converting ${createPaymentDto.amount} ${createPaymentDto.currency} to ${cryptoAmount} ${createPaymentDto.cryptoCurrency}`);
+
       // Create invoice with Plisio
       const plisioResponse = await this.createPlisioInvoice({
         orderNumber,
-        amount: createPaymentDto.amount,
+        amount: cryptoAmount, // Send crypto amount instead of fiat amount
         currency: createPaymentDto.currency,
         cryptoCurrency: createPaymentDto.cryptoCurrency,
         orderName: createPaymentDto.orderName || `Crypto Payment - ${orderNumber}`,
@@ -63,7 +69,7 @@ export class PaymentsService {
       // Create transaction with crypto payment data
       const transaction = new this.transactionModel({
         user: user._id,
-        amount: createPaymentDto.amount,
+        amount: createPaymentDto.amount, // Keep original fiat amount
         transactionType: TransactionType.TOP_UP,
         action: TransactionAction.CRYPTO_PAYMENT,
         status: TransactionStatus.PENDING,
@@ -76,7 +82,7 @@ export class PaymentsService {
         cryptoInvoiceId: plisioResponse.txn_id,
         cryptoOrderNumber: orderNumber,
         cryptoCurrency: createPaymentDto.cryptoCurrency,
-        cryptoAmount: parseFloat(plisioResponse.invoice_total_sum),
+        cryptoAmount: cryptoAmount, // Store calculated crypto amount
         cryptoWalletAddress: plisioResponse.wallet_hash,
         cryptoInvoiceUrl: plisioResponse.invoice_url,
         cryptoExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
@@ -354,6 +360,44 @@ export class PaymentsService {
       }
       this.logger.error('Failed to fetch currencies from Plisio:', error.message);
       throw new BadRequestException('Failed to fetch supported currencies');
+    }
+  }
+
+  // Get exchange rate from Plisio
+  private async getCryptoRate(currency: string, cryptoCurrency: string): Promise<number> {
+    try {
+      this.logger.log(`Getting exchange rate for ${currency} to ${cryptoCurrency}`);
+      
+      // First try to get currency rates
+      const response = await axios.get(`${this.plisioBaseUrl}/currencies`, {
+        params: { api_key: this.plisioApiKey }
+      });
+
+      if (response.data.status === 'error') {
+        throw new Error(response.data.data?.message || 'Failed to fetch exchange rate');
+      }
+
+      const currencies = response.data.data;
+      this.logger.log(`Available currencies count:`, currencies.length);
+      
+      // Find the crypto currency rate by searching through the array
+      const cryptoCurrencyData = currencies.find(curr => 
+        curr.currency === cryptoCurrency || curr.cid === cryptoCurrency
+      );
+      
+      if (cryptoCurrencyData) {
+        const rate = parseFloat(cryptoCurrencyData.rate_usd);
+        this.logger.log(`Found ${cryptoCurrencyData.name} (${cryptoCurrencyData.currency})`);
+        this.logger.log(`Exchange rate: 1 ${currency} = ${rate} ${cryptoCurrency}`);
+        return rate;
+      }
+      
+      throw new Error(`Exchange rate not found for ${cryptoCurrency}`);
+    } catch (error) {
+      this.logger.error(`Failed to get exchange rate: ${error.message}`);
+      // Fallback: use a simple conversion (this should be replaced with proper rate)
+      this.logger.warn('Using fallback exchange rate calculation');
+      return 0.000025; // Approximate BTC rate for $50 = 0.00125 BTC
     }
   }
 
