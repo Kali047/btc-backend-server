@@ -6,6 +6,7 @@ import { UsersModule } from './users/users.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { WalletsModule } from './wallets/wallets.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { WalletsModule } from './wallets/wallets.module';
     TransactionsModule,
     CloudinaryModule,
     WalletsModule,
+    PaymentsModule,
   ],
 })
 export class AppModule {}

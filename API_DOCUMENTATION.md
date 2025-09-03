@@ -654,13 +654,147 @@ Authorization: Bearer <jwt-token>
 }
 ```
 
-## 🚀 Getting Started
+---
+
+## � Crypto Payment Endpoints (`/payments`)
+
+### 35. **POST** `/payments/crypto/create`
+**Description**: Create crypto payment invoice using Plisio  
+**Authentication**: JWT required  
+**Account Status**: Account must be ACTIVE  
+**Request Body**:
+```json
+{
+  "amount": 50.00,
+  "currency": "USD",
+  "cryptoCurrency": "BTC",
+  "description": "Wallet top-up",
+  "orderName": "Crypto Payment"
+}
+```
+**Response**:
+```json
+{
+    "date": "2025-09-03T10:05:52.744Z",
+    "amount": 50,
+    "status": "pending",
+    "paymentMethod": "Crypto - BTC",
+    "reference": "CRYPTO1756893950937DLXK6H",
+    "description": "Wallet top-up",
+    "user": "68b43f26a868b02be1b0af7d",
+    "action": "crypto_payment",
+    "transactionType": "top-up",
+    "cryptoInvoiceId": "68b812ffe107c7aad501449f",
+    "cryptoOrderNumber": "CRYPTO1756893950937DLXK6H",
+    "cryptoCurrency": "BTC",
+    "cryptoAmount": 50,
+    "cryptoInvoiceUrl": "https://plisio.net/invoice/68b812ffe107c7aad501449f",
+    "cryptoExpiresAt": "2025-09-04T10:05:52.744Z",
+    "plisioWebhookData": {
+        "txn_id": "68b812ffe107c7aad501449f",
+        "invoice_url": "https://plisio.net/invoice/68b812ffe107c7aad501449f",
+        "invoice_total_sum": "50.00000000"
+    },
+    "createdAt": "2025-09-03T10:05:52.772Z",
+    "updatedAt": "2025-09-03T10:05:52.772Z",
+    "userDetails": {
+        "userId": "3887737",
+        "fullname": "josh",
+        "email": "josh@gmail.com",
+        "id": "68b43f26a868b02be1b0af7d"
+    },
+    "id": "68b81300d6c3f04eddb98e24"
+}
+```
+**Error Responses**:
+- `400 Bad Request`: Invalid payment data or Plisio API error
+- `403 Forbidden`: Account not active
+
+### 36. **GET** `/payments/crypto/{orderNumber}`
+**Description**: Get crypto payment by order number  
+**Authentication**: JWT required  
+**Response**: Crypto payment object with transaction details
+
+### 37. **GET** `/payments/crypto`
+**Description**: Get user's crypto payment history  
+**Authentication**: JWT required  
+**Query Parameters**:
+- `page`: number (default: 1)
+- `limit`: number (default: 10)
+
+**Response**:
+```json
+{
+  "payments": [/* crypto payment objects */],
+  "total": "number",
+  "page": "number",
+  "totalPages": "number"
+}
+```
+
+### 38. **GET** `/payments/crypto/currencies`
+**Description**: Get supported crypto currencies from Plisio  
+**Authentication**: None required  
+**Response**: Array of supported cryptocurrency objects
+
+### 39. **POST** `/payments/webhook`
+**Description**: Plisio webhook endpoint for payment status updates  
+**Authentication**: None required (public endpoint)  
+**Request Body**: Plisio webhook payload  
+**Response**:
+```json
+{
+  "status": "OK|ERROR",
+  "message": "string"
+}
+```
+
+### 40. **GET** `/payments/admin/crypto`
+**Description**: Get all crypto payments (Admin only)  
+**Authentication**: JWT + Admin role required  
+**Query Parameters**:
+- `page`: number (default: 1)
+- `limit`: number (default: 10)
+
+**Response**: Paginated crypto payments with user details
+
+### 41. **GET** `/payments/admin/crypto/{orderNumber}`
+**Description**: Get specific crypto payment (Admin only)  
+**Authentication**: JWT + Admin role required  
+**Response**: Complete crypto payment object with all details
+
+---
+
+## 🔄 Crypto Payment Flow
+
+1. **Create Payment**: User calls `POST /payments/crypto/create`
+2. **Get Payment URL**: Redirect user to `invoiceUrl` from response
+3. **User Pays**: User sends crypto to provided wallet address
+4. **Webhook Updates**: Plisio sends status updates to `/payments/webhook`
+5. **Completion**: Successful payments update user's wallet balance
+
+## 💎 Crypto Payment Statuses
+
+| Status | Description |
+|--------|-------------|
+| `new` | Payment created, waiting for crypto |
+| `pending` | Crypto received, waiting confirmations |
+| `confirming` | Getting blockchain confirmations |
+| `completed` | Payment confirmed and processed |
+| `error` | Payment failed |
+| `expired` | Payment expired (24 hours) |
+| `cancelled` | Payment cancelled |
+
+---
+
+## �🚀 Getting Started
 
 1. **Start the server**: `npm run start:dev`
 2. **Register a user**: `POST /auth/register`
 3. **Login**: `POST /auth/login`
 4. **Use the JWT token** in Authorization header for protected endpoints
 5. **Create/manage wallets** and **transactions** as needed
+6. **Set up Plisio** following the `PLISIO_SETUP_GUIDE.md`
 
 ## 🔧 Environment Variables
 
@@ -671,6 +805,8 @@ JWT_SECRET=your-jwt-secret
 CLOUDINARY_CLOUD_NAME=your-cloud-name
 CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
+PLISIO_API_KEY=your-plisio-secret-key
+PLISIO_CALLBACK_URL=https://yourdomain.com/payments/webhook
 ```
 
 ## 📝 Notes
@@ -678,5 +814,6 @@ CLOUDINARY_API_SECRET=your-api-secret
 - All amounts are in decimal format
 - Dates are in ISO format
 - File uploads use Cloudinary for storage
+- Crypto payments use Plisio for processing
 - All responses include appropriate HTTP status codes
 - Error responses follow consistent format with message and status code

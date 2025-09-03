@@ -20,7 +20,8 @@ export enum TransactionAction {
   FUNDING = 'funding',
   TRADE = 'trade',
   TRANSFER = 'transfer',
-  PAYMENT = 'payment'
+  PAYMENT = 'payment',
+  CRYPTO_PAYMENT = 'crypto_payment'
 }
 
 @Schema({ timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } })
@@ -54,6 +55,46 @@ export class Transaction {
 
   @Prop({ type: String, enum: TransactionType, required: true })
   transactionType: TransactionType;
+
+  // Crypto Payment Fields
+  @Prop()
+  cryptoInvoiceId?: string; // Plisio invoice ID
+
+  @Prop()
+  cryptoOrderNumber?: string; // Plisio order number
+
+  @Prop()
+  cryptoCurrency?: string; // BTC, ETH, etc.
+
+  @Prop()
+  cryptoAmount?: number; // Amount in crypto
+
+  @Prop()
+  cryptoWalletAddress?: string; // Payment wallet address
+
+  @Prop()
+  cryptoTxnId?: string; // Blockchain transaction ID
+
+  @Prop()
+  cryptoConfirmations?: number; // Blockchain confirmations
+
+  @Prop()
+  cryptoInvoiceUrl?: string; // Plisio payment URL
+
+  @Prop()
+  cryptoActualAmount?: number; // Actual crypto amount received
+
+  @Prop()
+  cryptoActualCurrency?: string; // Actual crypto currency received
+
+  @Prop()
+  cryptoExpiresAt?: Date; // Payment expiration time
+
+  @Prop()
+  cryptoCompletedAt?: Date; // Payment completion time
+
+  @Prop({ type: Object })
+  plisioWebhookData?: any; // Store webhook data from Plisio
 }
 
 export const TransactionSchema = SchemaFactory.createForClass(Transaction);
