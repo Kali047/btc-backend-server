@@ -52,10 +52,10 @@ export class AuthService {
     
     // Create wallet for the new user
     try {
-      await this.walletsService.create(userData.userId, {});
+      await this.walletsService.create(userData.id, {});
     } catch (error) {
       // Log error but don't fail registration if wallet creation fails
-      console.error('Failed to create wallet for user:', userData.userId, error);
+      console.error('Failed to create wallet for user:', userData.id, error);
     }
     
     const payload = { email: userData.email, sub: userData.id, role: userData.role };
