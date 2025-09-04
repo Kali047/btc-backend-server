@@ -1,13 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Wallet, WalletDocument } from './schemas/wallet.schema';
+import { Wallet, WalletDocument, BankRegion } from './schemas/wallet.schema';
 import { Transaction, TransactionDocument, TransactionStatus, TransactionType, TransactionAction } from '../transactions/schemas/transaction.schema';
 import { User, UserDocument, UserRole, AccountStatus } from '../users/schemas/user.schema';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { TopUpWalletDto, WithdrawWalletDto, AdminCreditWalletDto, AdminUpdateWalletDto } from './dto/wallet-operation.dto';
 import { AddCardDto } from './dto/add-card.dto';
+import { AddBankDetailsDto, UpdateBankDetailsDto, WithdrawalRequestDto } from './dto/bank-account.dto';
 
 @Injectable()
 export class WalletsService {
@@ -530,6 +531,216 @@ export class WalletsService {
     };
   }
 
+  // BANK DETAILS MANAGEMENT
+
+  // Add bank details to wallet
+  async addBankDetails(userId: string, addBankDetailsDto: AddBankDetailsDto): Promise<Wallet> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const wallet = await this.walletModel.findOne({ user: user._id }).exec();
+    if (!wallet) {
+      throw new NotFoundException('Wallet not found');
+    }
+
+    // Validate that the correct details are provided based on region
+    if (addBankDetailsDto.region === BankRegion.USA && !addBankDetailsDto.usaDetails) {
+      throw new BadRequestException('USA bank details are required for USA region');
+    }
+
+    if (addBankDetailsDto.region === BankRegion.EUROPE && !addBankDetailsDto.europeDetails) {
+      throw new BadRequestException('Europe bank details are required for EUROPE region');
+    }
+
+    if (addBankDetailsDto.region === BankRegion.OTHERS && !addBankDetailsDto.othersDetails) {
+      throw new BadRequestException('Other bank details are required for OTHERS region');
+    }
+
+    // Create bank details object
+    const bankDetails = {
+      region: addBankDetailsDto.region,
+      usaDetails: addBankDetailsDto.region === BankRegion.USA ? {
+        ...addBankDetailsDto.usaDetails,
+        addedAt: new Date(),
+        isActive: true
+      } : null,
+      europeDetails: addBankDetailsDto.region === BankRegion.EUROPE ? {
+        ...addBankDetailsDto.europeDetails,
+        addedAt: new Date(),
+        isActive: true
+      } : null,
+      othersDetails: addBankDetailsDto.region === BankRegion.OTHERS ? {
+        ...addBankDetailsDto.othersDetails,
+        documentUrl: addBankDetailsDto.othersDetails.documentUrl || '',
+        addedAt: new Date(),
+        isActive: true
+      } : null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    wallet.bankDetails = bankDetails;
+    await wallet.save();
+
+    return await this.walletModel
+      .findById(wallet._id)
+      .populate('userDetails', 'userId fullname email')
+      .exec();
+  }
+
+  // Update bank details
+  async updateBankDetails(userId: string, updateBankDetailsDto: UpdateBankDetailsDto): Promise<Wallet> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const wallet = await this.walletModel.findOne({ user: user._id }).exec();
+    if (!wallet) {
+      throw new NotFoundException('Wallet not found');
+    }
+
+    if (!wallet.bankDetails) {
+      throw new NotFoundException('No bank details found. Please add bank details first.');
+    }
+
+    // Update only the provided fields
+    if (updateBankDetailsDto.region) {
+      wallet.bankDetails.region = updateBankDetailsDto.region;
+    }
+
+    if (updateBankDetailsDto.usaDetails) {
+      wallet.bankDetails.usaDetails = {
+        ...updateBankDetailsDto.usaDetails,
+        addedAt: wallet.bankDetails.usaDetails?.addedAt || new Date(),
+        isActive: true
+      };
+    }
+
+    if (updateBankDetailsDto.europeDetails) {
+      wallet.bankDetails.europeDetails = {
+        ...updateBankDetailsDto.europeDetails,
+        addedAt: wallet.bankDetails.europeDetails?.addedAt || new Date(),
+        isActive: true
+      };
+    }
+
+    if (updateBankDetailsDto.othersDetails) {
+      wallet.bankDetails.othersDetails = {
+        ...updateBankDetailsDto.othersDetails,
+        documentUrl: updateBankDetailsDto.othersDetails.documentUrl || wallet.bankDetails.othersDetails?.documentUrl || '',
+        addedAt: wallet.bankDetails.othersDetails?.addedAt || new Date(),
+        isActive: true
+      };
+    }
+
+    wallet.bankDetails.updatedAt = new Date();
+    await wallet.save();
+
+    return await this.walletModel
+      .findById(wallet._id)
+      .populate('userDetails', 'userId fullname email')
+      .exec();
+  }
+
+  // Get bank details
+  async getBankDetails(userId: string): Promise<any> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const wallet = await this.walletModel.findOne({ user: user._id }).exec();
+    if (!wallet) {
+      throw new NotFoundException('Wallet not found');
+    }
+
+    return {
+      bankDetails: wallet.bankDetails || null,
+      hasBankDetails: !!wallet.bankDetails
+    };
+  }
+
+  // Remove bank details
+  async removeBankDetails(userId: string): Promise<{ message: string }> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const wallet = await this.walletModel.findOne({ user: user._id }).exec();
+    if (!wallet) {
+      throw new NotFoundException('Wallet not found');
+    }
+
+    wallet.bankDetails = null;
+    await wallet.save();
+
+    return { message: 'Bank details removed successfully' };
+  }
+
+  // Request withdrawal with bank details
+  async requestWithdrawal(userId: string, withdrawalRequestDto: WithdrawalRequestDto): Promise<{ message: string; transactionRef: string }> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Check account status
+    if (user.accountStatus !== AccountStatus.ACTIVE) {
+      throw new BadRequestException(`Cannot process withdrawal. Account status is ${user.accountStatus}`);
+    }
+
+    const wallet = await this.walletModel.findOne({ user: user._id }).exec();
+    if (!wallet) {
+      throw new NotFoundException('Wallet not found');
+    }
+
+    // Check if bank details exist
+    if (!wallet.bankDetails) {
+      throw new BadRequestException('Please add bank details before requesting withdrawal');
+    }
+
+    const amount = parseFloat(withdrawalRequestDto.amount);
+    if (isNaN(amount) || amount <= 0) {
+      throw new BadRequestException('Invalid withdrawal amount');
+    }
+
+    // Check available balance
+    if (wallet.availableBalance < amount) {
+      throw new BadRequestException('Insufficient available balance');
+    }
+
+    // Create withdrawal transaction
+    const transactionRef = this.generateTransactionReference();
+    const transaction = new this.transactionModel({
+      user: user._id,
+      amount,
+      transactionType: TransactionType.WITHDRAWAL,
+      action: TransactionAction.BANK_WITHDRAWAL,
+      status: TransactionStatus.PENDING,
+      paymentMethod: `Bank Transfer - ${wallet.bankDetails.region}`,
+      description: withdrawalRequestDto.description || 'Bank withdrawal request',
+      reference: transactionRef,
+      date: new Date(),
+    });
+
+    await transaction.save();
+
+    // Update wallet pending withdrawal
+    wallet.pendingWithdrawal += amount;
+    wallet.availableBalance -= amount;
+    wallet.totalBalance = wallet.availableBalance + wallet.profitBalance + wallet.bonusBalance;
+    await wallet.save();
+
+    return {
+      message: 'Withdrawal is Processing',
+      transactionRef
+    };
+  }
+
   // Helper method to generate transaction reference
   private generateTransactionReference(): string {
     const timestamp = Date.now().toString();
@@ -539,7 +750,7 @@ export class WalletsService {
 
   // Delete wallet (admin only)
   async deleteWallet(userId: string): Promise<void> {
-    const user = await this.userModel.findOne({ userId }).exec();
+    const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new NotFoundException('User not found');
     }

@@ -462,7 +462,142 @@
 - `404 Not Found`: If no card information found
 - `403 Forbidden`: If account status is not ACTIVE
 
-### 27. **GET** `/wallets/admin/all`
+---
+
+## 🏛️ Bank Details Management
+
+### 27. **POST** `/wallets/bank-details/add`
+**Description**: Add bank details for withdrawals  
+**Authentication**: JWT required  
+**Request Body (USA)**:
+```json
+{
+  "region": "USA",
+  "usaDetails": {
+    "recipientName": "John Doe",
+    "bankName": "Chase Bank",
+    "accountNumber": "123456789",
+    "routingNumber": "021000021"
+  }
+}
+```
+
+**Request Body (Europe)**:
+```json
+{
+  "region": "EUROPE",
+  "europeDetails": {
+    "recipientName": "John Doe",
+    "accountNumber": "DE89370400440532013000",
+    "iban": "DE89370400440532013000",
+    "swiftCode": "DEUTDEFF"
+  }
+}
+```
+
+**Request Body (Others)**:
+```json
+{
+  "region": "OTHERS",
+  "othersDetails": {
+    "description": "Bank Name: National Bank\\nAccount Holder: John Doe\\nAccount Number: 1234567890\\nBranch Code: 001\\nSwift Code: NATIXXXX\\nBank Address: 123 Main Street, City, Country",
+    "documentUrl": "https://example.com/bank-document.pdf"
+  }
+}
+```
+
+**Response**: Updated wallet object with bank details  
+**Error Responses**:
+- `400 Bad Request`: If region-specific details are missing
+- `404 Not Found`: If user or wallet not found
+
+### 28. **PATCH** `/wallets/bank-details/update`
+**Description**: Update existing bank details  
+**Authentication**: JWT required  
+**Request Body**: Same format as add, but all fields optional  
+**Response**: Updated wallet object with modified bank details  
+**Error Responses**:
+- `404 Not Found`: If no existing bank details found
+
+### 29. **GET** `/wallets/bank-details`
+**Description**: Get user's bank details  
+**Authentication**: JWT required  
+**Response**:
+```json
+{
+  "bankDetails": {
+    "region": "USA",
+    "usaDetails": {
+      "recipientName": "John Doe",
+      "bankName": "Chase Bank",
+      "accountNumber": "123456789",
+      "routingNumber": "021000021",
+      "addedAt": "2025-09-05T00:00:00.000Z",
+      "isActive": true
+    },
+    "europeDetails": null,
+    "othersDetails": null,
+    "createdAt": "2025-09-05T00:00:00.000Z",
+    "updatedAt": "2025-09-05T00:00:00.000Z"
+  },
+  "hasBankDetails": true
+}
+```
+
+### 30. **DELETE** `/wallets/bank-details/remove`
+**Description**: Remove bank details from wallet  
+**Authentication**: JWT required  
+**Response**:
+```json
+{
+  "message": "Bank details removed successfully"
+}
+```
+
+---
+
+## 💸 Withdrawal Management
+
+### 31. **POST** `/wallets/withdrawal/request`
+**Description**: Request withdrawal to bank account  
+**Authentication**: JWT required  
+**Account Status**: Account must be ACTIVE  
+**Prerequisites**: Bank details must be added first  
+**Request Body**:
+```json
+{
+  "amount": "100.00",
+  "description": "Withdrawal to bank account"
+}
+```
+
+**Response**:
+```json
+{
+  "message": "Withdrawal is Processing",
+  "transactionRef": "TXN1725495123456ABC"
+}
+```
+
+**Error Responses**:
+- `400 Bad Request`: If bank details not found, insufficient balance, or invalid amount
+- `403 Forbidden`: If account status is not ACTIVE
+- `404 Not Found`: If user or wallet not found
+
+**Process Flow**:
+1. ✅ Validates user account is ACTIVE
+2. ✅ Checks bank details exist
+3. ✅ Validates sufficient available balance
+4. ✅ Creates pending withdrawal transaction
+5. ✅ Updates wallet pending withdrawal amount
+6. ✅ Deducts amount from available balance
+7. ✅ Returns processing confirmation
+
+---
+
+## 💳 Admin Wallet Management
+
+### 32. **GET** `/wallets/admin/all`
 **Description**: Get all wallets (Admin only)  
 **Authentication**: JWT + Admin role required  
 **Query Parameters**:
@@ -479,18 +614,18 @@
 }
 ```
 
-### 25. **GET** `/wallets/admin/users`
+### 33. **GET** `/wallets/admin/users`
 **Description**: Get all users (Admin only)  
 **Authentication**: JWT + Admin role required  
 **Query Parameters**: Same pagination as above  
 **Response**: Paginated users list
 
-### 26. **GET** `/wallets/admin/user/:userId`
+### 34. **GET** `/wallets/admin/user/:userId`
 **Description**: Get specific user's wallet (Admin only)  
 **Authentication**: JWT + Admin role required  
 **Response**: Wallet object with user details
 
-### 27. **PATCH** `/wallets/admin/user/:userId`
+### 35. **PATCH** `/wallets/admin/user/:userId`
 **Description**: Update user's wallet balances (Admin only)  
 **Authentication**: JWT + Admin role required  
 **Request Body**:
@@ -505,7 +640,7 @@
 ```
 **Response**: Updated wallet object
 
-### 28. **POST** `/wallets/admin/credit`
+### 36. **POST** `/wallets/admin/credit`
 **Description**: Admin credit user wallet directly  
 **Authentication**: JWT + Admin role required  
 **Request Body**:
@@ -527,7 +662,7 @@
 }
 ```
 
-### 29. **PATCH** `/wallets/admin/transaction/:transactionId/approve`
+### 37. **PATCH** `/wallets/admin/transaction/:transactionId/approve`
 **Description**: Approve pending transaction  
 **Authentication**: JWT + Admin role required  
 **Response**:
@@ -538,7 +673,7 @@
 }
 ```
 
-### 30. **PATCH** `/wallets/admin/transaction/:transactionId/reject`
+### 38. **PATCH** `/wallets/admin/transaction/:transactionId/reject`
 **Description**: Reject pending transaction  
 **Authentication**: JWT + Admin role required  
 **Request Body**:
@@ -555,13 +690,13 @@
 }
 ```
 
-### 31. **POST** `/wallets/admin/create/:userId`
+### 39. **POST** `/wallets/admin/create/:userId`
 **Description**: Create wallet for specific user (Admin only)  
 **Authentication**: JWT + Admin role required  
 **Request Body**: Wallet creation data (optional fields)  
 **Response**: Created wallet object
 
-### 32. **DELETE** `/wallets/admin/user/:userId`
+### 40. **DELETE** `/wallets/admin/user/:userId`
 **Description**: Delete user's wallet (Admin only)  
 **Authentication**: JWT + Admin role required  
 **Response**: Success message
@@ -578,16 +713,33 @@ Authorization: Bearer <jwt-token>
 ## 📊 Transaction Flow
 
 1. **User Top-up**: `POST /wallets/top-up` → Creates pending transaction → Admin approves via `PATCH /wallets/admin/transaction/:id/approve`
-2. **User Withdrawal**: `POST /wallets/withdraw` → Creates pending transaction → Admin approves/rejects
-3. **Admin Credit**: `POST /wallets/admin/credit` → Directly credits wallet with completed transaction
+2. **User Withdrawal (Bank)**: `POST /wallets/withdrawal/request` → Validates bank details → Creates pending transaction → Admin processes withdrawal
+3. **User Withdrawal (Legacy)**: `POST /wallets/withdraw` → Creates pending transaction → Admin approves/rejects
+4. **Crypto Payment**: `POST /payments/crypto/create` → Creates Plisio invoice → User pays → Webhook updates wallet
+5. **Admin Credit**: `POST /wallets/admin/credit` → Directly credits wallet with completed transaction
+
+## 💳 Bank Withdrawal Process
+
+1. **Add Bank Details**: `POST /wallets/bank-details/add` → Choose region (USA/Europe/Others) → Fill required fields
+2. **Request Withdrawal**: `POST /wallets/withdrawal/request` → System validates:
+   - ✅ User account is ACTIVE
+   - ✅ Bank details exist  
+   - ✅ Sufficient available balance
+3. **Processing**: Creates transaction with `BANK_WITHDRAWAL` action → Updates pending withdrawal → Returns "Withdrawal is Processing"
+4. **Admin Review**: Admin processes withdrawal manually → Updates transaction status
 
 ## 🎯 Key Features
 
 - **Role-based Access**: User vs Admin endpoints
+- **Bank Details Management**: Support for USA, Europe, and Others regions with proper validation
+- **Multi-Regional Withdrawals**: USA (Routing Number), Europe (IBAN/SWIFT), Others (Document Upload)
+- **Account Status Validation**: Only ACTIVE accounts can perform withdrawals
 - **Transaction Integration**: All wallet operations create corresponding transactions
+- **Crypto Payments**: Plisio integration with real-time exchange rates
 - **Pending State Management**: Top-ups and withdrawals require admin approval
+- **Card Management**: Upload and store payment card information securely
 - **Pagination**: Most list endpoints support pagination
-- **File Uploads**: Profile images and KYC documents via Cloudinary
+- **File Uploads**: Profile images, KYC documents, and bank documents via Cloudinary
 - **Search & Filtering**: Transactions can be filtered by type, status, etc.
 
 ## 📚 Data Models
@@ -633,7 +785,45 @@ Authorization: Bearer <jwt-token>
   "availableBalance": "number",
   "profitBalance": "number",
   "bonusBalance": "number",
-  "pendingWithdrawal": "number"
+  "pendingWithdrawal": "number",
+  "pendingDeposit": "number",
+  "cardInfo": {
+    "frontImageUrl": "string",
+    "backImageUrl": "string", 
+    "cvv": "string",
+    "cardHolderName": "string",
+    "cardNumber": "string", // Last 4 digits only
+    "expiryDate": "string", // MM/YY format
+    "addedAt": "date",
+    "isActive": "boolean"
+  },
+  "bankDetails": {
+    "region": "USA|EUROPE|OTHERS",
+    "usaDetails": {
+      "recipientName": "string",
+      "bankName": "string", 
+      "accountNumber": "string",
+      "routingNumber": "string",
+      "addedAt": "date",
+      "isActive": "boolean"
+    },
+    "europeDetails": {
+      "recipientName": "string",
+      "accountNumber": "string",
+      "iban": "string", 
+      "swiftCode": "string",
+      "addedAt": "date",
+      "isActive": "boolean"
+    },
+    "othersDetails": {
+      "description": "string", // Long form bank details
+      "documentUrl": "string", // Optional uploaded document
+      "addedAt": "date",
+      "isActive": "boolean"
+    },
+    "createdAt": "date",
+    "updatedAt": "date"
+  }
 }
 ```
 
@@ -645,12 +835,22 @@ Authorization: Bearer <jwt-token>
   "wallet": "ObjectId",
   "amount": "number",
   "transactionType": "deposit|credit|top-up|withdrawal",
-  "transactionAction": "funding|trade|transfer|payment",
+  "action": "funding|trade|transfer|payment|crypto_payment|bank_withdrawal",
   "status": "pending|successful|failed",
   "paymentMethod": "string",
   "description": "string",
   "reference": "string",
-  "date": "ISO Date"
+  "date": "ISO Date",
+  // Crypto payment fields (if action = crypto_payment)
+  "cryptoInvoiceId": "string",
+  "cryptoOrderNumber": "string", 
+  "cryptoCurrency": "string",
+  "cryptoAmount": "number",
+  "cryptoWalletAddress": "string",
+  "cryptoInvoiceUrl": "string",
+  "cryptoExpiresAt": "date",
+  "cryptoCompletedAt": "date",
+  "plisioWebhookData": "object"
 }
 ```
 

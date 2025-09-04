@@ -21,7 +21,8 @@ export enum TransactionAction {
   TRADE = 'trade',
   TRANSFER = 'transfer',
   PAYMENT = 'payment',
-  CRYPTO_PAYMENT = 'crypto_payment'
+  CRYPTO_PAYMENT = 'crypto_payment',
+  BANK_WITHDRAWAL = 'bank_withdrawal'
 }
 
 @Schema({ timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } })

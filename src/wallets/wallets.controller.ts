@@ -18,6 +18,7 @@ import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { TopUpWalletDto, WithdrawWalletDto, AdminCreditWalletDto, AdminUpdateWalletDto } from './dto/wallet-operation.dto';
 import { AddCardDto } from './dto/add-card.dto';
+import { AddBankDetailsDto, UpdateBankDetailsDto, WithdrawalRequestDto } from './dto/bank-account.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -101,6 +102,35 @@ export class WalletsController {
   @Delete('card/remove')
   removeCard(@Request() req) {
     return this.walletsService.removeCard(req.user.userId);
+  }
+
+  // BANK DETAILS MANAGEMENT ENDPOINTS
+
+  @Post('bank-details/add')
+  addBankDetails(@Request() req, @Body() addBankDetailsDto: AddBankDetailsDto) {
+    return this.walletsService.addBankDetails(req.user.userId, addBankDetailsDto);
+  }  
+
+  @Patch('bank-details/update')
+  updateBankDetails(@Request() req, @Body() updateBankDetailsDto: UpdateBankDetailsDto) {
+    return this.walletsService.updateBankDetails(req.user.userId, updateBankDetailsDto);
+  }
+
+  @Get('bank-details')
+  getBankDetails(@Request() req) {
+    return this.walletsService.getBankDetails(req.user.userId);
+  }
+
+  @Delete('bank-details/remove')
+  removeBankDetails(@Request() req) {
+    return this.walletsService.removeBankDetails(req.user.userId);
+  }
+
+  // WITHDRAWAL REQUEST ENDPOINT
+
+  @Post('withdrawal/request')
+  requestWithdrawal(@Request() req, @Body() withdrawalRequestDto: WithdrawalRequestDto) {
+    return this.walletsService.requestWithdrawal(req.user.userId, withdrawalRequestDto);
   }
 
   // ADMIN ENDPOINTS

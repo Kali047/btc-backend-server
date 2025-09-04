@@ -3,6 +3,90 @@ import { Document, Schema as MongooseSchema, Types } from 'mongoose';
 
 export type WalletDocument = Wallet & Document;
 
+export enum BankRegion {
+  USA = 'USA',
+  EUROPE = 'EUROPE',
+  OTHERS = 'OTHERS'
+}
+
+@Schema({ _id: false })
+export class USABankDetails {
+  @Prop({ required: true })
+  recipientName: string;
+
+  @Prop({ required: true })
+  bankName: string;
+
+  @Prop({ required: true })
+  accountNumber: string;
+
+  @Prop({ required: true })
+  routingNumber: string;
+
+  @Prop({ default: Date.now })
+  addedAt: Date;
+
+  @Prop({ default: true })
+  isActive: boolean;
+}
+
+@Schema({ _id: false })
+export class EuropeBankDetails {
+  @Prop({ required: true })
+  recipientName: string;
+
+  @Prop({ required: true })
+  accountNumber: string;
+
+  @Prop({ required: true })
+  iban: string;
+
+  @Prop({ required: true })
+  swiftCode: string;
+
+  @Prop({ default: Date.now })
+  addedAt: Date;
+
+  @Prop({ default: true })
+  isActive: boolean;
+}
+
+@Schema({ _id: false })
+export class OthersBankDetails {
+  @Prop({ required: true })
+  description: string; // Long description of account details
+
+  @Prop()
+  documentUrl?: string; // URL to uploaded account details document
+
+  @Prop({ default: Date.now })
+  addedAt: Date;
+
+  @Prop({ default: true })
+  isActive: boolean;
+}
+
+@Schema({ _id: false })
+export class BankDetails {
+  @Prop({ enum: BankRegion, required: true })
+  region: BankRegion;
+
+  @Prop({ type: USABankDetails, default: null })
+  usaDetails: USABankDetails;
+
+  @Prop({ type: EuropeBankDetails, default: null })
+  europeDetails: EuropeBankDetails;
+
+  @Prop({ type: OthersBankDetails, default: null })
+  othersDetails: OthersBankDetails;
+
+  @Prop({ default: Date.now })
+  createdAt: Date;
+
+  @Prop({ default: Date.now })
+  updatedAt: Date;
+}
+
 @Schema({ _id: false })
 export class CardInfo {
   @Prop({ required: true })
@@ -55,6 +139,9 @@ export class Wallet {
 
   @Prop({ type: CardInfo, default: null })
   cardInfo: CardInfo;
+
+  @Prop({ type: BankDetails, default: null })
+  bankDetails: BankDetails;
 }
 
 export const WalletSchema = SchemaFactory.createForClass(Wallet);
