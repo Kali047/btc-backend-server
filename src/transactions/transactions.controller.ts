@@ -75,6 +75,14 @@ export class TransactionsController {
     return this.transactionsService.getUserTransactionStats(req.user.userId);
   }
 
+
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+    @Get('stats/admin')
+  getAdminStats(@Request() req) {
+    return this.transactionsService.getUserTransactionStatusStats(req.user.userId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string, @Request() req) {
     return this.transactionsService.findOne(id, req.user.userId, req.user.role);

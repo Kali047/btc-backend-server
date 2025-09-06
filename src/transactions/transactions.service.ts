@@ -221,6 +221,33 @@ export class TransactionsService {
     };
   }
 
+  async getUserTransactionStatusStats(userId: string) {
+  const depositStats = await this.transactionModel.aggregate([
+    {
+      $match: {
+        user: new Types.ObjectId(userId),
+        transactionType: 'DEPOSIT',
+        status: { $in: ['SUCCESSFUL', 'FAILED', 'PENDING'] },
+      },
+    },
+    {
+      $group: {
+        _id: '$status',
+        totalAmount: { $sum: '$amount' },
+      },
+    },
+  ]);
+
+  // Convert array into an object keyed by status
+  return depositStats.reduce((acc, stat) => {
+    acc[stat._id] = {
+      totalAmount: stat.totalAmount,
+    };
+    return acc;
+  }, {});
+}
+
+
   private generateReference(): string {
     const timestamp = Date.now().toString();
     const random = Math.random().toString(36).substring(2, 8);
