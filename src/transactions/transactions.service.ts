@@ -184,7 +184,6 @@ export class TransactionsService {
 
   async getUserTransactionStats(userId: string) {
     const stats = await this.transactionModel.aggregate([
-      { $match: { user: new Types.ObjectId(userId) } },
       {
         $group: {
           _id: '$status',
@@ -195,7 +194,6 @@ export class TransactionsService {
     ]);
 
     const typeStats = await this.transactionModel.aggregate([
-      { $match: { user: new Types.ObjectId(userId) } },
       {
         $group: {
           _id: '$transactionType',
