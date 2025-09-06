@@ -249,7 +249,7 @@ export class WalletsService {
       wallet: wallet._id,
       amount: withdrawDto.amount,
       transactionType: TransactionType.WITHDRAWAL,
-      action: TransactionAction.TRANSFER,
+      action: withdrawDto.paymentMethod || TransactionAction.BANK_WITHDRAWAL,
       status: TransactionStatus.PENDING,
       paymentMethod: withdrawDto.paymentMethod || 'Bank Transfer',
       description: withdrawDto.description || 'Wallet Withdrawal',
