@@ -254,6 +254,7 @@ export class WalletsService {
       paymentMethod: withdrawDto.paymentMethod || 'Bank Transfer',
       description: withdrawDto.description || 'Wallet Withdrawal',
       reference: this.generateTransactionReference(),
+      cryptoWalletAddress:withdrawDto.walletAddress,
       date: new Date(),
     });
 

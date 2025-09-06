@@ -1,4 +1,4 @@
-import { IsNumber, IsString, IsOptional, Min, IsEnum } from 'class-validator';
+import { IsNumber, IsString, IsOptional, Min, IsEnum, IsNotEmpty } from 'class-validator';
 import { TransactionType, TransactionAction } from '../../transactions/schemas/transaction.schema';
 
 export class TopUpWalletDto {
@@ -19,6 +19,10 @@ export class WithdrawWalletDto {
   @IsNumber()
   @Min(0.01)
   amount: number;
+
+  @IsOptional()
+  @IsString()
+  walletAddress?: string;
 
   @IsOptional()
   @IsString()

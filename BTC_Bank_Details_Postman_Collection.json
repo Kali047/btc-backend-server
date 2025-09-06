@@ -1,0 +1,886 @@
+{
+	"info": {
+		"_postman_id": "b8f7c9e2-4d3a-4b5c-9f1e-2a8b7c6d5e4f",
+		"name": "BTC API - Bank Details & Withdrawals",
+		"description": "Complete API collection for BTC trading platform including bank details management and withdrawal functionality",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.access_token) {",
+									"        pm.environment.set('authToken', response.access_token);",
+									"        pm.environment.set('userId', response.user.userId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullname\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"phoneNumber\": \"+1234567890\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					}
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.access_token) {",
+									"        pm.environment.set('authToken', response.access_token);",
+									"        pm.environment.set('userId', response.user.userId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Bank Details Management",
+			"item": [
+				{
+					"name": "Add USA Bank Details",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"region\": \"USA\",\n  \"usaDetails\": {\n    \"recipientName\": \"John Doe\",\n    \"bankName\": \"Chase Bank\",\n    \"accountNumber\": \"123456789\",\n    \"routingNumber\": \"021000021\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/wallets/bank-details/add",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallets",
+								"bank-details",
+								"add"
+							]
+						}
+					}
+				},
+				{
+					"name": "Add Europe Bank Details",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"region\": \"EUROPE\",\n  \"europeDetails\": {\n    \"recipientName\": \"John Doe\",\n    \"accountNumber\": \"DE89370400440532013000\",\n    \"iban\": \"DE89370400440532013000\",\n    \"swiftCode\": \"DEUTDEFF\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/wallets/bank-details/add",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallets",
+								"bank-details",
+								"add"
+							]
+						}
+					}
+				},
+				{
+					"name": "Add Others Bank Details",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"region\": \"OTHERS\",\n  \"othersDetails\": {\n    \"description\": \"Bank Name: National Bank of Country\\nAccount Holder: John Doe\\nAccount Number: 1234567890\\nBranch Code: 001\\nSwift Code: NATIXXXX\\nBank Address: 123 Main Street, City, Country\\nSpecial Instructions: Please process as international wire transfer\",\n    \"documentUrl\": \"https://example.com/bank-document.pdf\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/wallets/bank-details/add",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallets",
+								"bank-details",
+								"add"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Bank Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/wallets/bank-details",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallets",
+								"bank-details"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update USA Bank Details",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"usaDetails\": {\n    \"recipientName\": \"John Smith\",\n    \"bankName\": \"Bank of America\",\n    \"accountNumber\": \"987654321\",\n    \"routingNumber\": \"026009593\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/wallets/bank-details/update",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallets",
+								"bank-details",
+								"update"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Europe Bank Details",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"europeDetails\": {\n    \"recipientName\": \"John Smith\",\n    \"accountNumber\": \"FR1420041010050500013M02606\",\n    \"iban\": \"FR1420041010050500013M02606\",\n    \"swiftCode\": \"BNPAFRPP\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/wallets/bank-details/update",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallets",
+								"bank-details",
+								"update"
+							]
+						}
+					}
+				},
+				{
+					"name": "Remove Bank Details",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/wallets/bank-details/remove",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallets",
+								"bank-details",
+								"remove"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Withdrawal Management",
+			"item": [
+				{
+					"name": "Request Withdrawal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": \"100.00\",\n  \"description\": \"Withdrawal to bank account\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/wallets/withdrawal/request",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallets",
+								"withdrawal",
+								"request"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Wallet Management",
+			"item": [
+				{
+					"name": "Get My Wallet",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/wallets/my-wallet",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallets",
+								"my-wallet"
+							]
+						}
+					}
+				},
+				{
+					"name": "Top Up Wallet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": \"50.00\",\n  \"paymentMethod\": \"Credit Card\",\n  \"description\": \"Wallet top-up\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/wallets/top-up",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallets",
+								"top-up"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Card Management",
+			"item": [
+				{
+					"name": "Add Card",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cardHolderName",
+									"value": "John Doe",
+									"type": "text"
+								},
+								{
+									"key": "cardNumber",
+									"value": "1234",
+									"type": "text",
+									"description": "Last 4 digits only"
+								},
+								{
+									"key": "expiryDate",
+									"value": "12/25",
+									"type": "text"
+								},
+								{
+									"key": "cvv",
+									"value": "123",
+									"type": "text"
+								},
+								{
+									"key": "files",
+									"type": "file",
+									"src": [],
+									"description": "Front image of card"
+								},
+								{
+									"key": "files",
+									"type": "file",
+									"src": [],
+									"description": "Back image of card"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/wallets/card/add",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallets",
+								"card",
+								"add"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Card Info",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/wallets/card/info",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallets",
+								"card",
+								"info"
+							]
+						}
+					}
+				},
+				{
+					"name": "Remove Card",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/wallets/card/remove",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallets",
+								"card",
+								"remove"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Crypto Payments",
+			"item": [
+				{
+					"name": "Create Crypto Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 100,\n  \"currency\": \"USD\",\n  \"cryptoCurrency\": \"BTC\",\n  \"orderName\": \"Wallet Top-up\",\n  \"description\": \"Bitcoin payment for wallet top-up\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/payments/crypto/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"crypto",
+								"create"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Supported Crypto Currencies",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/payments/crypto/currencies",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"crypto",
+								"currencies"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Crypto Payment by Order Number",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/payments/crypto/order/CRYPTO1725495123456ABC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"crypto",
+								"order",
+								"CRYPTO1725495123456ABC"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get User Crypto Payments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/payments/crypto?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"crypto"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Transactions",
+			"item": [
+				{
+					"name": "Get User Transactions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/transactions?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Transaction by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/transactions/{{transactionId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"transactions",
+								"{{transactionId}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "User Profile",
+			"item": [
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"profile"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullname\": \"John Smith\",\n  \"phoneNumber\": \"+1234567891\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"profile"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Admin Endpoints",
+			"item": [
+				{
+					"name": "Get All Wallets (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/wallets/admin/all?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallets",
+								"admin",
+								"all"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get All Crypto Payments (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/payments/admin/crypto?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"payments",
+								"admin",
+								"crypto"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Admin Credit Wallet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"amount\": \"100.00\",\n  \"balanceType\": \"available\",\n  \"description\": \"Admin credit bonus\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/wallets/admin/credit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"wallets",
+								"admin",
+								"credit"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "transactionId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
