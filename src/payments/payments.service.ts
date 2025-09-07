@@ -52,7 +52,7 @@ export class PaymentsService {
     try {
       // Get exchange rate and calculate crypto amount
       const exchangeRate = await this.getCryptoRate(createPaymentDto.currency, createPaymentDto.cryptoCurrency);
-      const cryptoAmount = createPaymentDto.amount;
+      const cryptoAmount = Number((createPaymentDto.amount * Number(exchangeRate)).toFixed(8));
       
       this.logger.log(`Converting ${createPaymentDto.amount} ${createPaymentDto.currency} to ${cryptoAmount} ${createPaymentDto.cryptoCurrency}`);
 
