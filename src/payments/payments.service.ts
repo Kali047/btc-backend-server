@@ -37,9 +37,9 @@ export class PaymentsService {
       throw new NotFoundException('User not found');
     }
 
-    // if (user.accountStatus !== AccountStatus.ACTIVE) {
-    //   throw new BadRequestException(`Cannot create payment. Account status is ${user.accountStatus}`);
-    // }
+    if (user.accountStatus !== AccountStatus.ACTIVE) {
+      throw new BadRequestException(`Cannot create payment. Account status is ${user.accountStatus}`);
+    }
 
         let wallet: WalletDocument | null = await this.walletModel.findOne({ user: user._id }).exec();
     if (!wallet) {
@@ -69,6 +69,7 @@ export class PaymentsService {
       // Create transaction with crypto payment data
       const transaction = new this.transactionModel({
         user: user._id,
+        wallet: wallet._id,
         amount: createPaymentDto.amount, // Keep original fiat amount
         transactionType: TransactionType.DEPOSIT,
         action: TransactionAction.CRYPTO_PAYMENT,
