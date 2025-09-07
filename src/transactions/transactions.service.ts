@@ -219,7 +219,7 @@ export class TransactionsService {
     };
   }
 
-  async getUserTransactionStatusStats() {
+async getUserTransactionStatusStats() {
   const depositStats = await this.transactionModel.aggregate([
     {
       $match: {
@@ -233,9 +233,14 @@ export class TransactionsService {
         totalAmount: { $sum: '$amount' },
       },
     },
+    {
+      $project: {
+        _id: 1,
+        totalAmount: { $round: ['$totalAmount', 3] }, // round to 3 decimals
+      },
+    },
   ]);
 
-  // Convert array into an object keyed by status
   return depositStats.reduce((acc, stat) => {
     acc[stat._id] = {
       totalAmount: stat.totalAmount,
@@ -243,6 +248,7 @@ export class TransactionsService {
     return acc;
   }, {});
 }
+
 
 
   private generateReference(): string {
