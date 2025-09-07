@@ -189,7 +189,6 @@ export class TransactionsService {
         $group: {
           _id: '$status',
           count: { $sum: 1 },
-          totalAmount: { $sum: '$amount' },
         },
       },
     ]);
@@ -200,7 +199,6 @@ export class TransactionsService {
         $group: {
           _id: '$transactionType',
           count: { $sum: 1 },
-          totalAmount: { $sum: '$amount' },
         },
       },
     ]);
@@ -209,14 +207,12 @@ export class TransactionsService {
       statusStats: stats.reduce((acc, stat) => {
         acc[stat._id] = {
           count: stat.count,
-          totalAmount: stat.totalAmount,
         };
         return acc;
       }, {}),
       typeStats: typeStats.reduce((acc, stat) => {
         acc[stat._id] = {
           count: stat.count,
-          totalAmount: stat.totalAmount,
         };
         return acc;
       }, {})

@@ -70,7 +70,7 @@ export class PaymentsService {
       const transaction = new this.transactionModel({
         user: user._id,
         amount: createPaymentDto.amount, // Keep original fiat amount
-        transactionType: TransactionType.TOP_UP,
+        transactionType: TransactionType.DEPOSIT,
         action: TransactionAction.CRYPTO_PAYMENT,
         status: TransactionStatus.PENDING,
         paymentMethod: `Crypto - ${createPaymentDto.cryptoCurrency}`,
@@ -251,7 +251,7 @@ export class PaymentsService {
   async getCryptoPayment(orderNumber: string, userId?: string): Promise<Transaction> {
     const query: any = { 
       cryptoOrderNumber: orderNumber,
-      transactionType: TransactionType.TOP_UP,
+      transactionType: TransactionType.DEPOSIT,
       action: TransactionAction.CRYPTO_PAYMENT
     };
     if (userId) {
@@ -283,7 +283,7 @@ export class PaymentsService {
       this.transactionModel
         .find({ 
           user: userId, 
-          transactionType: TransactionType.TOP_UP,
+          transactionType: TransactionType.DEPOSIT,
           action: TransactionAction.CRYPTO_PAYMENT
         })
         .sort({ date: -1 })
@@ -292,7 +292,7 @@ export class PaymentsService {
         .exec(),
       this.transactionModel.countDocuments({ 
         user: userId, 
-        transactionType: TransactionType.TOP_UP,
+        transactionType: TransactionType.DEPOSIT,
         action: TransactionAction.CRYPTO_PAYMENT
       })
     ]);
@@ -315,7 +315,7 @@ export class PaymentsService {
     const [payments, total] = await Promise.all([
       this.transactionModel
         .find({ 
-          transactionType: TransactionType.TOP_UP,
+          transactionType: TransactionType.DEPOSIT,
           action: TransactionAction.CRYPTO_PAYMENT
         })
         .populate('userDetails', 'userId fullname email')
@@ -324,7 +324,7 @@ export class PaymentsService {
         .limit(limit)
         .exec(),
       this.transactionModel.countDocuments({ 
-        transactionType: TransactionType.TOP_UP,
+        transactionType: TransactionType.DEPOSIT,
         action: TransactionAction.CRYPTO_PAYMENT
       })
     ]);
