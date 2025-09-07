@@ -80,7 +80,7 @@ export class TransactionsController {
   @Roles(UserRole.ADMIN)
     @Get('stats/admin')
   getAdminStats(@Request() req) {
-    return this.transactionsService.getUserTransactionStatusStats(req.user.userId);
+    return this.transactionsService.getUserTransactionStatusStats();
   }
 
   @Get(':id')

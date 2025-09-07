@@ -219,12 +219,11 @@ export class TransactionsService {
     };
   }
 
-  async getUserTransactionStatusStats(userId: string) {
+  async getUserTransactionStatusStats() {
   const depositStats = await this.transactionModel.aggregate([
     {
       $match: {
-        user: new Types.ObjectId(userId),
-        transactionType: 'withdrawal',
+        transactionType: 'deposit',
         status: { $in: ['successful', 'failed', 'pending'] },
       },
     },
