@@ -718,6 +718,7 @@ export class WalletsService {
     const transactionRef = this.generateTransactionReference();
     const transaction = new this.transactionModel({
       user: user._id,
+      wallet: wallet._id, 
       amount,
       transactionType: TransactionType.WITHDRAWAL,
       action: TransactionAction.BANK_WITHDRAWAL,
